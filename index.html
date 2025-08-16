@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test Checklist Maker</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f9fa; }
+.container { max-width: 1200px; margin: auto; padding: 20px; }
+h1 { color: #333; }
+label { display: block; margin-top: 10px; font-weight: bold; }
+input[type=text], textarea { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+button { margin-top: 10px; padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; }
+button:hover { background-color: #0056b3; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; visibility: hidden; }
+th, td { border: 1px solid #ddd; padding: 8px; }
+th { background: #f1f1f1; }
+tr:nth-child(even) { background: #f9f9f9; }
+.checkboxes label { display: inline-block; margin-right: 15px; font-weight: normal; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🧪 Test Checklist Maker</h1>
+<p>新機能名や概要を入力すると、テストチェックリストを自動生成します。</p>
+
+<label>新機能名</label>
+<input type="text" id="featureName" placeholder="例：ホーム画面の検索バー追加">
+
+<label>プラットフォーム</label>
+<div class="checkboxes">
+  <label><input type="checkbox" name="platform" value="iOS"> iOS</label>
+  <label><input type="checkbox" name="platform" value="Android"> Android</label>
+  <label><input type="checkbox" name="platform" value="Web"> Web</label>
+</div>
+
+<label>機能概要（任意）</label>
+<textarea id="featureDesc" placeholder="仕様や画面遷移、入力などの要点を簡単に記入"></textarea>
+
+<button id="genBtn">チェックリスト作成</button>
+
+<table id="checklistTable">
+<thead>
+<tr>
+  <th>#</th>
+  <th>テストカテゴリ</th>
+  <th>テスト項目</th>
+  <th>手順</th>
+  <th>期待結果</th>
+  <th>優先度</th>
+  <th>状態</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const BASE_CATEGORIES = [
+    "導線・遷移","UI/UX","入力/バリデーション","機能(正常系)","異常系/例外",
+    "パフォーマンス","セキュリティ","マルチ環境","アクセシビリティ","回帰/影響"
+  ];
+
+  const CATEGORY_DEFAULTS = {
+    "導線・遷移":[
+      ["導線が表示される","対象画面を開く","仕様どおりに導線が表示される","Medium"],
+      ["遷移が正しい","導線を操作する","想定画面へ遷移し戻れる","High"]
+    ],
+    "UI/UX":[
+      ["表示が崩れていない","複数端末/向きで確認","レイアウトが崩れない","Medium"]
+    ]
+  };
+
+  document.getElementById("genBtn").onclick = function() {
+    const feature = document.getElementById("featureName").value.trim() || "新機能";
+    const platformEls = document.querySelectorAll('input[name="platform"]:checked');
+    const platforms = Array.from(platformEls).map(el => el.value);
+    const desc = document.getElementById("featureDesc").value.trim();
+
+    const rows = [];
+    BASE_CATEGORIES.forEach(cat=>{
+      if (CATEGORY_DEFAULTS[cat]) {
+        CATEGORY_DEFAULTS[cat].forEach(([title,steps,expected,prio])=>{
+          rows.push({cat,title,steps,expected,prio,status:"未着手"});
+        });
+      } else {
+        rows.push({cat, title:`${feature}の${cat}確認`, steps:"確認手順記入", expected:"期待結果記入", prio:"Low", status:"未着手"});
+      }
+    });
+
+    const tbody = document.querySelector("#checklistTable tbody");
+    tbody.innerHTML = "";
+    rows.forEach((row, idx)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${row.cat}</td>
+        <td>${row.title}</td>
+        <td>${row.steps}</td>
+        <td>${row.expected}</td>
+        <td>${row.prio}</td>
+        <td>${row.status}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById("checklistTable").style.visibility = "visible";
+  };
+});
+</script>
+</body>
+</html>
